@@ -249,6 +249,7 @@ public class ComposeMessageActivity extends Activity
     private static final int MENU_GROUP_PARTICIPANTS    = 32;
     private static final int MENU_ADD_TEMPLATE          = 34;
     private static final int MENU_ADD_TO_CALENDAR       = 36;
+    private static final int MENU_CONVERSATION_OPTIONS  = 37;
 
     private static final int DIALOG_TEMPLATE_SELECT     = 1;
     private static final int DIALOG_TEMPLATE_NOT_AVAILABLE = 2;
@@ -2945,6 +2946,20 @@ public class ComposeMessageActivity extends Activity
 
         buildAddAddressToContactMenuItem(menu);
 
+        // Add to Blacklist item (if enabled) and we are running on CyanogenMod
+        // This allows the app to be run on non-blacklist enabled roms (including Stock)
+        if (MessageUtils.isCyanogenMod(this)) {
+            if (BlacklistUtils.isBlacklistEnabled(this)) {
+                menu.add(0, MENU_ADD_TO_BLACKLIST, 0, R.string.add_to_blacklist)
+                        .setIcon(R.drawable.ic_block_message_holo_dark)
+                        .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+            }
+        }
+
+        if (mConversation.getThreadId() > 0) {
+            menu.add(0, MENU_CONVERSATION_OPTIONS, 0, R.string.menu_conversation_options);
+        }
+
         menu.add(0, MENU_PREFERENCES, 0, R.string.menu_preferences).setIcon(
                 android.R.drawable.ic_menu_preferences);
 
@@ -3041,6 +3056,12 @@ public class ComposeMessageActivity extends Activity
                 mAddContactIntent = item.getIntent();
                 startActivityForResult(mAddContactIntent, REQUEST_CODE_ADD_CONTACT);
                 break;
+            case MENU_CONVERSATION_OPTIONS: {
+                Intent intent = new Intent(this, ConversationOptionsActivity.class);
+                intent.putExtra(THREAD_ID, mConversation.getThreadId());
+                startActivityIfNeeded(intent, -1);
+                break;
+            }
             case MENU_PREFERENCES: {
                 Intent intent = new Intent(this, MessagingPreferenceActivity.class);
                 startActivityIfNeeded(intent, -1);
